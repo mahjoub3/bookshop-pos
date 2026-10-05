@@ -1,0 +1,16 @@
+{# Toast container — listens for `toast` window events. HTMX responses carry
+   HX-Trigger headers that app.js converts into the same events. #}
+<div class="fixed bottom-4 right-4 z-50 space-y-2 w-80" aria-live="polite">
+  <template x-for="toast in toasts" :key="toast.id">
+    <div x-transition.opacity.duration.300ms
+         class="px-4 py-3 rounded-lg shadow-lg text-sm text-white flex items-start gap-2"
+         :class="{
+           'bg-emerald-600': toast.type === 'success',
+           'bg-red-600': toast.type === 'error',
+           'bg-amber-500': toast.type === 'warning',
+           'bg-sky-600': !['success','error','warning'].includes(toast.type),
+         }">
+      <span x-text="toast.text" class="flex-1"></span>
+    </div>
+  </template>
+</div>

@@ -1,0 +1,6 @@
+{% load shop_extras %}
+{# Excel/PDF export buttons preserving current query string #}
+<div class="flex gap-1">
+  <a href="?{% querystring request format='xlsx' %}" class="btn-secondary !py-1.5 text-xs">⬇ Excel</a>
+  <a href="?{% querystring request format='pdf' %}" target="_blank" class="btn-secondary !py-1.5 text-xs">⬇ PDF</a>
+</div>

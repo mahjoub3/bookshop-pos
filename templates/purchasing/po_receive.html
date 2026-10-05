@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Receive PO-{{ po.pk }} — {{ shop.shop_name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto card p-6">
+  <h1 class="text-xl font-bold mb-1">Receive stock — PO-{{ po.pk }}</h1>
+  <p class="text-sm text-gray-500 mb-4">Partial receiving is allowed. Product cost prices update to the last received cost.</p>
+  <form method="post">
+    {% csrf_token %}
+    <table class="w-full mb-4">
+      <thead><tr>
+        <th class="th">Product</th><th class="th text-right">Outstanding</th><th class="th text-right">Receive now</th>
+      </tr></thead>
+      <tbody>
+        {% for item in po.items.all %}
+        {% if item.outstanding %}
+        <tr>
+          <td class="td">{{ item.product.title }}</td>
+          <td class="td text-right">{{ item.outstanding }}</td>
+          <td class="td text-right">
+            <input type="number" name="receive_{{ item.pk }}" min="0" max="{{ item.outstanding }}"
+                   value="{{ item.outstanding }}" class="input !py-1 !px-2 !w-24 text-right">
+          </td>
+        </tr>
+        {% endif %}
+        {% endfor %}
+      </tbody>
+    </table>
+    <div class="flex gap-2">
+      <button type="submit" class="btn-primary">Post receipt</button>
+      <a href="{% url 'purchasing:po_detail' po.pk %}" class="btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

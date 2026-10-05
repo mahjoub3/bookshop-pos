@@ -1,0 +1,32 @@
+{% load shop_extras %}
+<table class="w-full">
+  <thead><tr>
+    <th class="th">Product</th><th class="th">Category</th>
+    <th class="th text-right">Stock</th><th class="th text-right">Reorder at</th>
+    <th class="th text-right">Stock value (cost)</th><th class="th"></th>
+  </tr></thead>
+  <tbody>
+    {% for product in products %}
+    <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+      <td class="td font-medium">{{ product.title }}</td>
+      <td class="td">{{ product.category.name|default:"—" }}</td>
+      <td class="td text-right">
+        {% if product.is_low_stock %}
+        <span class="badge bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">{{ product.current_stock }}</span>
+        {% else %}{{ product.current_stock }}{% endif %}
+      </td>
+      <td class="td text-right text-gray-500">{{ product.effective_reorder_level }}</td>
+      <td class="td text-right">{{ product.cost_price|mul:product.current_stock|money:shop.currency }}</td>
+      <td class="td text-right space-x-2 whitespace-nowrap">
+        <a href="{% url 'inventory:product_history' product.pk %}" class="text-indigo-600 hover:underline text-sm">History</a>
+        {% if request.user.profile.role != 'cashier' %}
+        <a href="{% url 'inventory:adjust' product.pk %}" class="text-indigo-600 hover:underline text-sm">Adjust</a>
+        {% endif %}
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="6" class="td text-center text-gray-400 py-8">No products.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% include "partials/_pagination.html" with htmx_target="#table-wrap" %}

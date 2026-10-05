@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% block title %}Adjust stock — {{ product.title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto card p-6">
+  <h1 class="text-xl font-bold mb-1">Adjust stock</h1>
+  <p class="text-sm text-gray-500 mb-4">{{ product.title }} — current stock: <b>{{ product.current_stock }}</b></p>
+  <form method="post" class="space-y-4">
+    {% csrf_token %}
+    {{ form|crispy }}
+    <div class="flex gap-2">
+      <button type="submit" class="btn-primary">Post adjustment</button>
+      <a href="{% url 'inventory:product_history' product.pk %}" class="btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

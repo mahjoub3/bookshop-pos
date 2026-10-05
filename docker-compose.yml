@@ -1,0 +1,31 @@
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      SECRET_KEY: change-me-in-production
+      DEBUG: "False"
+      ALLOWED_HOSTS: localhost,127.0.0.1
+      DB_ENGINE: postgres
+      POSTGRES_DB: bookshop
+      POSTGRES_USER: bookshop
+      POSTGRES_PASSWORD: bookshop
+      POSTGRES_HOST: db
+    depends_on:
+      - db
+    volumes:
+      - media_data:/app/media
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: bookshop
+      POSTGRES_USER: bookshop
+      POSTGRES_PASSWORD: bookshop
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+volumes:
+  pg_data:
+  media_data:

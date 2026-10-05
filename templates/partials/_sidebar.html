@@ -1,0 +1,42 @@
+{# Left sidebar with icons; collapsible via Alpine #}
+<aside class="bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col transition-all duration-200"
+       :class="sidebarOpen ? 'w-56' : 'w-16'">
+  <div class="h-14 flex items-center gap-2 px-4 border-b border-gray-200 dark:border-gray-800">
+    <span class="text-xl">📚</span>
+    <span class="font-semibold truncate" x-show="sidebarOpen" x-cloak>{{ shop.shop_name }}</span>
+  </div>
+  <nav class="flex-1 py-3 space-y-1 overflow-y-auto text-sm">
+    {% url 'dashboard:home' as dash_url %}
+    {% url 'sales:pos' as pos_url %}
+    {% url 'catalog:product_list' as prod_url %}
+    {% url 'inventory:stock_list' as inv_url %}
+    {% url 'purchasing:po_list' as pur_url %}
+    {% url 'customers:customer_list' as cust_url %}
+    {% url 'reports:daily_sales' as rep_url %}
+    {% url 'core:settings' as set_url %}
+    {% with path=request.path %}
+    <a href="{{ dash_url }}" class="sidebar-link {% if path == dash_url %}sidebar-link-active{% endif %}">
+      <span>🏠</span><span x-show="sidebarOpen" x-cloak>Dashboard</span></a>
+    <a href="{{ pos_url }}" class="sidebar-link {% if pos_url in path %}sidebar-link-active{% endif %}">
+      <span>🧾</span><span x-show="sidebarOpen" x-cloak>POS / New Sale</span></a>
+    <a href="{% url 'sales:sale_list' %}" class="sidebar-link {% if '/sales/' in path and pos_url not in path %}sidebar-link-active{% endif %}">
+      <span>💰</span><span x-show="sidebarOpen" x-cloak>Sales</span></a>
+    <a href="{{ prod_url }}" class="sidebar-link {% if prod_url in path %}sidebar-link-active{% endif %}">
+      <span>📦</span><span x-show="sidebarOpen" x-cloak>Products</span></a>
+    <a href="{{ inv_url }}" class="sidebar-link {% if inv_url in path %}sidebar-link-active{% endif %}">
+      <span>📋</span><span x-show="sidebarOpen" x-cloak>Inventory</span></a>
+    <a href="{{ pur_url }}" class="sidebar-link {% if pur_url in path %}sidebar-link-active{% endif %}">
+      <span>🚚</span><span x-show="sidebarOpen" x-cloak>Purchasing</span></a>
+    <a href="{{ cust_url }}" class="sidebar-link {% if cust_url in path %}sidebar-link-active{% endif %}">
+      <span>👥</span><span x-show="sidebarOpen" x-cloak>Customers</span></a>
+    {% if request.user.profile.role != 'cashier' %}
+    <a href="{{ rep_url }}" class="sidebar-link {% if '/reports/' in path %}sidebar-link-active{% endif %}">
+      <span>📊</span><span x-show="sidebarOpen" x-cloak>Reports</span></a>
+    {% endif %}
+    {% if request.user.profile.role == 'admin' %}
+    <a href="{{ set_url }}" class="sidebar-link {% if set_url in path %}sidebar-link-active{% endif %}">
+      <span>⚙️</span><span x-show="sidebarOpen" x-cloak>Settings</span></a>
+    {% endif %}
+    {% endwith %}
+  </nav>
+</aside>

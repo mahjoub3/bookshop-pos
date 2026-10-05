@@ -1,0 +1,135 @@
+{% load shop_extras %}
+{# Cart table + customer + totals + payment panel. Swapped as one unit. #}
+{% if last_sale %}
+<a id="last-receipt-link" href="{% url 'sales:receipt' last_sale.pk %}" class="hidden">receipt</a>
+<div class="m-4 px-4 py-3 rounded-lg bg-emerald-50 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between">
+  <span class="text-sm font-medium text-emerald-800 dark:text-emerald-200">
+    ✅ Sale {{ last_sale.receipt_no }} saved — {{ last_sale.total|money:shop.currency }}
+  </span>
+  <a href="{% url 'sales:receipt' last_sale.pk %}" target="_blank" class="btn-secondary !py-1 text-xs">🖨 Print receipt</a>
+</div>
+{% endif %}
+
+<div class="p-4">
+  {# Customer selector #}
+  <div class="flex items-center gap-2 mb-3" x-data="{ open: false }">
+    <span class="text-sm text-gray-500">Customer:</span>
+    {% if customer %}
+      <span class="badge bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
+        {{ customer.name }} — balance {{ customer_balance|money:shop.currency }}
+      </span>
+      <form hx-post="{% url 'sales:pos_set_customer' %}" hx-target="#cart-area" hx-swap="innerHTML">
+        {% csrf_token %}
+        <input type="hidden" name="customer_id" value="">
+        <button class="text-xs text-red-500 hover:underline">walk-in</button>
+      </form>
+    {% else %}
+      <span class="text-sm font-medium">Walk-in</span>
+    {% endif %}
+    <div class="relative flex-1">
+      <input type="search" class="input !py-1.5 text-sm" placeholder="Find customer…"
+             hx-get="{% url 'sales:pos_customer_search' %}" hx-trigger="keyup changed delay:300ms"
+             hx-target="#customer-results" name="q" autocomplete="off">
+      <div id="customer-results" class="absolute z-20 inset-x-0 mt-1"></div>
+    </div>
+  </div>
+
+  {# Cart lines #}
+  <table class="w-full">
+    <thead><tr>
+      <th class="th">Product</th><th class="th w-20">Qty</th>
+      <th class="th w-28">Price</th><th class="th w-24">Disc.</th>
+      <th class="th w-28 text-right">Total</th><th class="th w-10"></th>
+    </tr></thead>
+    <tbody>
+      {% for line in lines %}
+      <tr>
+        <td class="td">
+          <div class="font-medium">{{ line.product.title }}</div>
+          <div class="text-xs text-gray-500">{{ line.product.sku }} · stock {{ line.product.current_stock }}</div>
+        </td>
+        <td class="td">
+          <form hx-post="{% url 'sales:pos_update' line.product.pk %}" hx-target="#cart-area" hx-swap="innerHTML">
+            {% csrf_token %}
+            <input type="number" name="qty" value="{{ line.qty }}" min="0"
+                   class="input !py-1 !px-2 w-16 text-center" onchange="this.form.requestSubmit()">
+          </form>
+        </td>
+        <td class="td">
+          <form hx-post="{% url 'sales:pos_update' line.product.pk %}" hx-target="#cart-area" hx-swap="innerHTML">
+            {% csrf_token %}
+            <input type="number" name="price" value="{{ line.price }}" step="0.01" min="0"
+                   class="input !py-1 !px-2 w-24 text-right" onchange="this.form.requestSubmit()">
+          </form>
+        </td>
+        <td class="td">
+          <form hx-post="{% url 'sales:pos_update' line.product.pk %}" hx-target="#cart-area" hx-swap="innerHTML">
+            {% csrf_token %}
+            <input type="number" name="discount" value="{{ line.discount }}" step="0.01" min="0"
+                   class="input !py-1 !px-2 w-20 text-right" onchange="this.form.requestSubmit()">
+          </form>
+        </td>
+        <td class="td text-right font-medium">{{ line.line_total|money:shop.currency }}</td>
+        <td class="td">
+          <form hx-post="{% url 'sales:pos_remove' line.product.pk %}" hx-target="#cart-area" hx-swap="innerHTML">
+            {% csrf_token %}
+            <button class="text-red-500 hover:text-red-700" title="Remove">✕</button>
+          </form>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" class="td text-center text-gray-400 py-8">Cart is empty — scan a barcode or search above.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{# Payment panel (hoisted into the right column by JS) #}
+<div id="payment-panel" class="card p-4 space-y-3" x-data="{ method: 'cash', tendered: '' }">
+  <div class="space-y-1 text-sm">
+    <div class="flex justify-between"><span>Subtotal</span><span>{{ totals.subtotal|money:shop.currency }}</span></div>
+    <div class="flex justify-between items-center">
+      <span>Cart discount</span>
+      <form hx-post="{% url 'sales:pos_set_discount' %}" hx-target="#cart-area" hx-swap="innerHTML">
+        {% csrf_token %}
+        <input type="number" name="discount" value="{{ cart.discount }}" step="0.01" min="0"
+               class="input !py-0.5 !px-2 w-24 text-right" onchange="this.form.requestSubmit()">
+      </form>
+    </div>
+    <div class="flex justify-between"><span>Tax ({{ shop.tax_rate }}%)</span><span>{{ totals.tax|money:shop.currency }}</span></div>
+    <div class="flex justify-between text-xl font-bold border-t border-gray-200 dark:border-gray-700 pt-2">
+      <span>Total</span><span id="pos-total" data-total="{{ totals.total }}">{{ totals.total|money:shop.currency }}</span>
+    </div>
+  </div>
+
+  <form hx-post="{% url 'sales:pos_checkout' %}" hx-target="#cart-area" hx-swap="innerHTML" class="space-y-3">
+    {% csrf_token %}
+    <div class="grid grid-cols-2 gap-2">
+      <label class="flex items-center gap-2 text-sm">
+        <input type="number" name="pay_cash" step="0.01" min="0" placeholder="Cash" class="input"
+               x-model.number="tendered" {% if not customer %}value="{{ totals.total }}"{% endif %}>
+      </label>
+      <label class="flex items-center gap-2 text-sm">
+        <input type="number" name="pay_card" step="0.01" min="0" placeholder="Card" class="input">
+      </label>
+      <input type="number" name="pay_transfer" step="0.01" min="0" placeholder="Transfer" class="input col-span-2">
+    </div>
+    <div class="flex justify-between text-sm">
+      <span>Change due</span>
+      <span class="font-semibold text-emerald-600"
+            x-text="Math.max(0, (tendered || 0) - parseFloat(document.getElementById('pos-total')?.dataset.total || 0)).toFixed(2)"></span>
+    </div>
+    <p class="text-xs text-gray-500">Leave fields blank for the unpaid remainder to go on credit (requires a customer).</p>
+
+    {% if request.user.profile.role != 'cashier' %}
+    <div class="flex gap-4 text-xs">
+      <label class="flex items-center gap-1"><input type="checkbox" name="allow_negative" value="1" class="rounded"> Allow negative stock</label>
+      <label class="flex items-center gap-1"><input type="checkbox" name="override_credit" value="1" class="rounded"> Override credit limit</label>
+    </div>
+    {% endif %}
+
+    <button type="submit" class="btn-primary w-full !py-3 text-lg" {% if not lines %}disabled{% endif %}>
+      Charge {{ totals.total|money:shop.currency }}
+    </button>
+  </form>
+</div>

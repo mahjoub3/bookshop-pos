@@ -1,0 +1,49 @@
+{% load shop_extras %}
+{# Clean 80mm receipt — browser print (Ctrl+P) #}
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Receipt {{ sale.receipt_no }}</title>
+  <style>
+    body { font-family: ui-monospace, monospace; width: 80mm; margin: 0 auto; padding: 8px; font-size: 12px; color: #000; }
+    .center { text-align: center; }
+    .line { border-top: 1px dashed #000; margin: 6px 0; }
+    table { width: 100%; border-collapse: collapse; }
+    td { padding: 1px 0; vertical-align: top; }
+    .r { text-align: right; }
+    .bold { font-weight: bold; }
+  </style>
+</head>
+<body onload="window.print()">
+  <div class="center">
+    {% if shop.receipt_header %}<div>{{ shop.receipt_header }}</div>{% endif %}
+    <div class="bold" style="font-size:14px">{{ shop.shop_name }}</div>
+    {% if shop.address %}<div>{{ shop.address }}</div>{% endif %}
+    {% if shop.phone %}<div>{{ shop.phone }}</div>{% endif %}
+  </div>
+  <div class="line"></div>
+  <div>{{ sale.receipt_no }} · {{ sale.sale_date|date:"Y-m-d H:i" }}</div>
+  <div>Cashier: {{ sale.user.username|default:"—" }}{% if sale.customer %} · Customer: {{ sale.customer.name }}{% endif %}</div>
+  <div class="line"></div>
+  <table>
+    {% for item in sale.items.all %}
+    <tr>
+      <td>{{ item.product.title }}<br><small>{{ item.quantity }} × {{ item.unit_price|money:shop.currency }}</small></td>
+      <td class="r">{{ item.line_total|money:shop.currency }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  <div class="line"></div>
+  <table>
+    <tr><td>Subtotal</td><td class="r">{{ sale.subtotal|money:shop.currency }}</td></tr>
+    {% if sale.discount %}<tr><td>Discount</td><td class="r">-{{ sale.discount|money:shop.currency }}</td></tr>{% endif %}
+    <tr><td>Tax</td><td class="r">{{ sale.tax|money:shop.currency }}</td></tr>
+    <tr class="bold"><td>TOTAL</td><td class="r">{{ sale.total|money:shop.currency }}</td></tr>
+    <tr><td>Paid</td><td class="r">{{ sale.amount_paid|money:shop.currency }}</td></tr>
+    {% if sale.amount_due > 0 %}<tr class="bold"><td>Due (credit)</td><td class="r">{{ sale.amount_due|money:shop.currency }}</td></tr>{% endif %}
+  </table>
+  <div class="line"></div>
+  <div class="center">{{ shop.receipt_footer }}</div>
+</body>
+</html>

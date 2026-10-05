@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% load shop_extras crispy_forms_tags %}
+{% block title %}{{ customer.name }} — {{ shop.shop_name }}{% endblock %}
+
+{% block content %}
+<div class="space-y-4">
+  <div class="flex items-center gap-3 flex-wrap">
+    <a href="{% url 'customers:customer_list' %}" class="btn-secondary">← Customers</a>
+    <h1 class="text-xl font-bold flex-1">{{ customer.name }}</h1>
+    <a href="{% url 'customers:statement' customer.pk %}" target="_blank" class="btn-secondary">📄 Statement (PDF)</a>
+    {% if request.user.profile.role != 'cashier' %}
+    <a href="{% url 'customers:customer_edit' customer.pk %}" class="btn-primary">Edit</a>
+    {% endif %}
+  </div>
+
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <div class="card p-4"><p class="text-sm text-gray-500">Balance due</p>
+      <p class="text-2xl font-bold {% if balance > 0 %}text-red-600{% else %}text-emerald-600{% endif %}">{{ balance|money:shop.currency }}</p></div>
+    <div class="card p-4"><p class="text-sm text-gray-500">Credit limit</p>
+      <p class="text-2xl font-bold">{{ customer.credit_limit|money:shop.currency }}</p></div>
+    <div class="card p-4"><p class="text-sm text-gray-500">Phone</p><p class="font-medium">{{ customer.phone|default:"—" }}</p></div>
+    <div class="card p-4"><p class="text-sm text-gray-500">Address</p><p class="font-medium">{{ customer.address|default:"—" }}</p></div>
+  </div>
+
+  {% if request.user.profile.role != 'cashier' %}
+  <div class="card p-4">
+    <h2 class="font-semibold mb-3">Record payment</h2>
+    <form method="post" action="{% url 'customers:record_payment' customer.pk %}" class="grid grid-cols-1 sm:grid-cols-5 gap-3 items-end">
+      {% csrf_token %}
+      <div><label class="block text-xs text-gray-500 mb-1">Amount</label>{{ payment_form.amount }}</div>
+      <div><label class="block text-xs text-gray-500 mb-1">Method</label>{{ payment_form.method }}</div>
+      <div><label class="block text-xs text-gray-500 mb-1">Apply to sale (optional)</label>{{ payment_form.sale }}</div>
+      <div><label class="block text-xs text-gray-500 mb-1">Note</label>{{ payment_form.note }}</div>
+      <button type="submit" class="btn-primary">Save payment</button>
+    </form>
+  </div>
+  {% endif %}
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div class="card p-4">
+      <h2 class="font-semibold mb-2">Purchase history</h2>
+      <table class="w-full">
+        <thead><tr><th class="th">Receipt</th><th class="th">Date</th><th class="th text-right">Total</th><th class="th">Status</th></tr></thead>
+        <tbody>
+          {% for sale in sales %}
+          <tr>
+            <td class="td"><a href="{% url 'sales:sale_detail' sale.pk %}" class="text-indigo-600 hover:underline">{{ sale.receipt_no }}</a></td>
+            <td class="td">{{ sale.sale_date|date:"Y-m-d" }}</td>
+            <td class="td text-right">{{ sale.total|money:shop.currency }}</td>
+            <td class="td">{{ sale.get_payment_status_display }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4" class="td text-center text-gray-400">No purchases yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="card p-4">
+      <h2 class="font-semibold mb-2">Payments</h2>
+      <table class="w-full">
+        <thead><tr><th class="th">Date</th><th class="th">Method</th><th class="th text-right">Amount</th><th class="th">By</th></tr></thead>
+        <tbody>
+          {% for p in payments %}
+          <tr>
+            <td class="td">{{ p.payment_date|date:"Y-m-d" }}</td>
+            <td class="td">{{ p.get_method_display }}</td>
+            <td class="td text-right">{{ p.amount|money:shop.currency }}</td>
+            <td class="td">{{ p.user.username|default:"—" }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4" class="td text-center text-gray-400">No payments yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

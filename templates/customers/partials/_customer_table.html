@@ -1,0 +1,33 @@
+{% load shop_extras %}
+<table class="w-full">
+  <thead><tr>
+    <th class="th">Name</th><th class="th">Phone</th>
+    <th class="th text-right">Credit limit</th><th class="th text-right">Balance</th><th class="th"></th>
+  </tr></thead>
+  <tbody>
+    {% for c in customers %}
+    <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+      <td class="td">
+        <a href="{% url 'customers:customer_detail' c.pk %}" class="font-medium text-indigo-600 dark:text-indigo-400 hover:underline">{{ c.name }}</a>
+        {% if not c.is_active %}<span class="badge bg-gray-200 dark:bg-gray-700 text-gray-500 ml-1">inactive</span>{% endif %}
+      </td>
+      <td class="td">{{ c.phone|default:"—" }}</td>
+      <td class="td text-right">{{ c.credit_limit|money:shop.currency }}</td>
+      <td class="td text-right font-medium">
+        {% with bal=balances|get_item:c.pk %}
+        <span class="{% if bal > 0 %}text-red-600{% endif %}">{{ bal|money:shop.currency }}</span>
+        {% endwith %}
+      </td>
+      <td class="td text-right space-x-2">
+        <a href="{% url 'customers:statement' c.pk %}" target="_blank" class="text-gray-500 hover:underline text-sm">Statement</a>
+        {% if request.user.profile.role != 'cashier' %}
+        <a href="{% url 'customers:customer_edit' c.pk %}" class="text-indigo-600 hover:underline text-sm">Edit</a>
+        {% endif %}
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5" class="td text-center text-gray-400 py-8">No customers yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% include "partials/_pagination.html" with htmx_target="#table-wrap" %}

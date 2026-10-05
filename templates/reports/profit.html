@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% load shop_extras %}
+{% block title %}Profit report — {{ shop.shop_name }}{% endblock %}
+
+{% block content %}
+<div class="card p-4">
+  <div class="flex flex-wrap items-center gap-2 mb-4">
+    <h1 class="text-xl font-bold flex-1">Profit report</h1>
+    {% include "reports/partials/_export_buttons.html" %}
+  </div>
+  <form method="get" class="flex flex-wrap items-center gap-2 mb-4">
+    <input type="date" name="start" value="{{ start|date:'Y-m-d' }}" class="input !w-40">
+    <input type="date" name="end" value="{{ end|date:'Y-m-d' }}" class="input !w-40">
+    <select name="group_by" class="input !w-44">
+      <option value="day" {% if report.group_by == 'day' %}selected{% endif %}>By day</option>
+      <option value="product" {% if report.group_by == 'product' %}selected{% endif %}>By product</option>
+      <option value="category" {% if report.group_by == 'category' %}selected{% endif %}>By category</option>
+      <option value="supplier" {% if report.group_by == 'supplier' %}selected{% endif %}>By supplier</option>
+    </select>
+    <button class="btn-primary">Apply</button>
+  </form>
+
+  <table class="w-full">
+    <thead><tr>
+      <th class="th">{{ report.group_by|title }}</th><th class="th text-right">Qty</th>
+      <th class="th text-right">Revenue</th><th class="th text-right">Cost</th>
+      <th class="th text-right">Discount</th><th class="th text-right">Profit</th>
+    </tr></thead>
+    <tbody>
+      {% for r in report.rows %}
+      <tr>
+        <td class="td font-medium">{{ r.key }}</td>
+        <td class="td text-right">{{ r.qty }}</td>
+        <td class="td text-right">{{ r.revenue|money:shop.currency }}</td>
+        <td class="td text-right">{{ r.cost|money:shop.currency }}</td>
+        <td class="td text-right">{{ r.discount|money:shop.currency }}</td>
+        <td class="td text-right font-medium {% if r.profit < 0 %}text-red-600{% endif %}">{{ r.profit|money:shop.currency }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" class="td text-center text-gray-400 py-8">No sales in this period.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="mt-4 max-w-sm ml-auto text-sm space-y-1">
+    <div class="flex justify-between"><span>Gross profit</span><span class="font-semibold">{{ report.gross_profit|money:shop.currency }}</span></div>
+    <div class="flex justify-between text-gray-500"><span>Return reversals (incl. above)</span><span>-{{ report.return_reversals|money:shop.currency }}</span></div>
+    <div class="flex justify-between"><span>Expenses</span><span>-{{ report.expenses|money:shop.currency }}</span></div>
+    <div class="flex justify-between text-lg font-bold border-t border-gray-200 dark:border-gray-700 pt-1">
+      <span>Net profit</span><span>{{ report.net_profit|money:shop.currency }}</span>
+    </div>
+  </div>
+</div>
+{% endblock %}

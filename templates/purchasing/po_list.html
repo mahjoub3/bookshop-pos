@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% load shop_extras %}
+{% block title %}Purchasing — {{ shop.shop_name }}{% endblock %}
+
+{% block content %}
+<div class="card p-4">
+  <div class="flex flex-wrap items-center gap-2 mb-4">
+    <h1 class="text-xl font-bold flex-1">Purchase orders</h1>
+    <select name="status" class="input !w-40" onchange="window.location='?status='+this.value">
+      <option value="">All statuses</option>
+      <option value="draft" {% if request.GET.status == 'draft' %}selected{% endif %}>Draft</option>
+      <option value="ordered" {% if request.GET.status == 'ordered' %}selected{% endif %}>Ordered</option>
+      <option value="received" {% if request.GET.status == 'received' %}selected{% endif %}>Received</option>
+      <option value="cancelled" {% if request.GET.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+    </select>
+    <a href="{% url 'catalog:supplier_list' %}" class="btn-secondary">Suppliers</a>
+    <a href="{% url 'purchasing:po_create' %}" class="btn-primary">+ New PO</a>
+  </div>
+  <table class="w-full">
+    <thead><tr>
+      <th class="th">PO</th><th class="th">Supplier</th><th class="th">Order date</th>
+      <th class="th">Status</th><th class="th text-right">Total</th><th class="th">By</th><th class="th"></th>
+    </tr></thead>
+    <tbody>
+      {% for po in orders %}
+      <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+        <td class="td font-mono">PO-{{ po.pk }}</td>
+        <td class="td">{{ po.supplier.name }}</td>
+        <td class="td">{{ po.order_date }}</td>
+        <td class="td">
+          <span class="badge
+            {% if po.status == 'received' %}bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200
+            {% elif po.status == 'cancelled' %}bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300
+            {% elif po.status == 'ordered' %}bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-200
+            {% else %}bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200{% endif %}">
+            {{ po.get_status_display }}
+          </span>
+        </td>
+        <td class="td text-right font-medium">{{ po.total|money:shop.currency }}</td>
+        <td class="td">{{ po.created_by.username|default:"—" }}</td>
+        <td class="td text-right"><a href="{% url 'purchasing:po_detail' po.pk %}" class="text-indigo-600 hover:underline text-sm">Open</a></td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7" class="td text-center text-gray-400 py-8">No purchase orders yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% include "partials/_pagination.html" %}
+</div>
+{% endblock %}

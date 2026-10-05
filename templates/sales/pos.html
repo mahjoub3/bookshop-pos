@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% load shop_extras %}
+{% block title %}POS — {{ shop.shop_name }}{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 h-full"
+     x-data="{ payOpen: false }"
+     @keydown.f2.prevent="payOpen = true"
+     @keydown.f4.prevent="$refs.barcode.focus()"
+     @keydown.escape.window="payOpen = false">
+
+  {# LEFT: scan/search + cart #}
+  <div class="lg:col-span-2 space-y-4">
+    <div class="card p-4">
+      <form hx-post="{% url 'sales:pos_scan' %}" hx-target="#cart-area" hx-swap="innerHTML" class="flex gap-2">
+        {% csrf_token %}
+        <input type="text" name="code" x-ref="barcode" autofocus autocomplete="off"
+               placeholder="Scan barcode or type SKU / ISBN + Enter"
+               class="input text-lg" id="barcode-input">
+      </form>
+      <div class="relative mt-2">
+        <input type="search" placeholder="Search products by title / author…"
+               class="input"
+               hx-get="{% url 'sales:pos_search' %}" hx-trigger="keyup changed delay:300ms"
+               hx-target="#search-results" hx-swap="innerHTML" name="q">
+        <div id="search-results" class="absolute z-20 inset-x-0 mt-1"></div>
+      </div>
+    </div>
+
+    <div id="cart-area" class="card">
+      {% include "sales/partials/_pos_cart.html" %}
+    </div>
+  </div>
+
+  {# RIGHT: totals + payment (rendered inside cart partial so HTMX updates it) #}
+  <div class="space-y-4">
+    <div id="payment-area"></div>
+    <div class="card p-4 text-sm text-gray-500 dark:text-gray-400">
+      <p class="font-medium mb-1">Shortcuts</p>
+      <p><kbd class="kbd">F2</kbd> open payment · <kbd class="kbd">F4</kbd> focus barcode · <kbd class="kbd">Esc</kbd> close payment</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Payment panel lives inside the cart partial; hoist it on load + after swaps.
+  function hoistPaymentPanel() {
+    const panel = document.getElementById('payment-panel');
+    if (panel) document.getElementById('payment-area').appendChild(panel);
+  }
+  document.addEventListener('DOMContentLoaded', hoistPaymentPanel);
+  document.body.addEventListener('htmx:afterSwap', (e) => {
+    if (e.detail.target.id === 'cart-area') {
+      hoistPaymentPanel();
+      const receipt = document.getElementById('last-receipt-link');
+      if (receipt) window.open(receipt.href, '_blank', 'width=400,height=600');
+      document.getElementById('barcode-input')?.focus();
+    }
+  });
+</script>
+{% endblock %}

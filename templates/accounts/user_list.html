@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Users — {{ shop.shop_name }}{% endblock %}
+
+{% block content %}
+<div class="card p-4 max-w-4xl">
+  <div class="flex items-center gap-2 mb-4">
+    <h1 class="text-xl font-bold flex-1">Users &amp; roles</h1>
+    <a href="{% url 'accounts:user_create' %}" class="btn-primary">+ New user</a>
+  </div>
+  <table class="w-full">
+    <thead><tr>
+      <th class="th">Username</th><th class="th">Name</th><th class="th">Role</th>
+      <th class="th">Active</th><th class="th"></th>
+    </tr></thead>
+    <tbody>
+      {% for u in users %}
+      <tr>
+        <td class="td font-medium">{{ u.username }}</td>
+        <td class="td">{{ u.get_full_name|default:"—" }}</td>
+        <td class="td"><span class="badge bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">{{ u.profile.get_role_display }}</span></td>
+        <td class="td">{% if u.is_active %}✅{% else %}—{% endif %}</td>
+        <td class="td text-right"><a href="{% url 'accounts:user_edit' u.pk %}" class="text-indigo-600 hover:underline text-sm">Edit</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% include "partials/_pagination.html" %}
+</div>
+{% endblock %}

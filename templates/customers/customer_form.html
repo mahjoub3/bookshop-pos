@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% block title %}{% if object %}Edit{% else %}New{% endif %} customer — {{ shop.shop_name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto card p-6">
+  <h1 class="text-xl font-bold mb-4">{% if object %}Edit: {{ object.name }}{% else %}New customer{% endif %}</h1>
+  <form method="post" class="space-y-4">
+    {% csrf_token %}
+    {{ form|crispy }}
+    <div class="flex gap-2">
+      <button type="submit" class="btn-primary">Save</button>
+      <a href="{% url 'customers:customer_list' %}" class="btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

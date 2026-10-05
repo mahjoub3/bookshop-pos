@@ -1,0 +1,21 @@
+{# Printable barcode label page #}
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Label — {{ product.title }}</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 16px; }
+    .label { display: inline-block; border: 1px dashed #999; padding: 12px 20px; }
+    .title { font-size: 13px; font-weight: 600; margin-bottom: 4px; max-width: 320px; }
+    .price { font-size: 15px; font-weight: 700; margin-top: 4px; }
+  </style>
+</head>
+<body onload="window.print()">
+  <div class="label">
+    <div class="title">{{ product.title }}</div>
+    <img src="data:image/png;base64,{{ png_b64 }}" alt="{{ code }}">
+    <div class="price">{{ shop.currency }}{{ product.sell_price }}</div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,25 @@
+{% load shop_extras %}
+{% if page_obj and page_obj.paginator.num_pages > 1 %}
+<nav class="flex items-center justify-between mt-4 text-sm">
+  <span class="text-gray-500 dark:text-gray-400">
+    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+    ({{ page_obj.paginator.count }} items)
+  </span>
+  <div class="flex gap-1">
+    {% if page_obj.has_previous %}
+    <a href="?{% querystring request page=page_obj.previous_page_number %}"
+       hx-get="?{% querystring request page=page_obj.previous_page_number %}"
+       hx-target="{% if htmx_target %}{{ htmx_target }}{% else %}#table-wrap{% endif %}"
+       hx-push-url="true"
+       class="px-3 py-1 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50">← Prev</a>
+    {% endif %}
+    {% if page_obj.has_next %}
+    <a href="?{% querystring request page=page_obj.next_page_number %}"
+       hx-get="?{% querystring request page=page_obj.next_page_number %}"
+       hx-target="{% if htmx_target %}{{ htmx_target }}{% else %}#table-wrap{% endif %}"
+       hx-push-url="true"
+       class="px-3 py-1 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50">Next →</a>
+    {% endif %}
+  </div>
+</nav>
+{% endif %}

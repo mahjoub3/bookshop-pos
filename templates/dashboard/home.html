@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% load shop_extras %}
+{% block title %}Dashboard — {{ shop.shop_name }}{% endblock %}
+
+{% block content %}
+<div class="space-y-4">
+  <h1 class="text-xl font-bold">Good day, {{ request.user.first_name|default:request.user.username }} 👋</h1>
+
+  {# KPI cards #}
+  <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
+    <div class="card p-4"><p class="text-sm text-gray-500">Today's sales</p>
+      <p class="text-2xl font-bold">{{ summary.total|money:shop.currency }}</p></div>
+    <div class="card p-4"><p class="text-sm text-gray-500">Today's profit</p>
+      <p class="text-2xl font-bold text-emerald-600">{{ summary.profit|money:shop.currency }}</p></div>
+    <div class="card p-4"><p class="text-sm text-gray-500">Transactions</p>
+      <p class="text-2xl font-bold">{{ summary.count }}</p></div>
+    <div class="card p-4"><p class="text-sm text-gray-500">Low-stock items</p>
+      <p class="text-2xl font-bold {% if low_stock_count %}text-amber-600{% endif %}">{{ low_stock_count }}</p></div>
+    <div class="card p-4"><p class="text-sm text-gray-500">Overdue credits</p>
+      <p class="text-2xl font-bold {% if overdue_count %}text-red-600{% endif %}">{{ overdue_count }}</p></div>
+  </div>
+
+  <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
+    {# Sales chart #}
+    <div class="card p-4 xl:col-span-2">
+      <h2 class="font-semibold mb-2">Sales — last 30 days</h2>
+      <div class="h-64"><canvas id="sales-chart"></canvas></div>
+    </div>
+
+    {# Top sellers #}
+    <div class="card p-4">
+      <h2 class="font-semibold mb-2">Top 5 this month</h2>
+      <table class="w-full">
+        <tbody>
+          {% for r in top_sellers %}
+          <tr>
+            <td class="td">{{ r.product__title }}</td>
+            <td class="td text-right font-medium">{{ r.qty }}</td>
+          </tr>
+          {% empty %}
+          <tr><td class="td text-gray-400">No sales this month.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
+    {# Recent sales #}
+    <div class="card p-4 xl:col-span-2">
+      <h2 class="font-semibold mb-2">Recent sales</h2>
+      <table class="w-full">
+        <thead><tr><th class="th">Receipt</th><th class="th">Customer</th><th class="th text-right">Total</th><th class="th">Status</th></tr></thead>
+        <tbody>
+          {% for sale in recent_sales %}
+          <tr>
+            <td class="td"><a href="{% url 'sales:sale_detail' sale.pk %}" class="text-indigo-600 hover:underline font-mono text-xs">{{ sale.receipt_no }}</a></td>
+            <td class="td">{{ sale.customer.name|default:"Walk-in" }}</td>
+            <td class="td text-right">{{ sale.total|money:shop.currency }}</td>
+            <td class="td">{{ sale.get_payment_status_display }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4" class="td text-center text-gray-400">No sales yet — open the POS!</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {# Low stock #}
+    <div class="card p-4">
+      <h2 class="font-semibold mb-2">Low stock</h2>
+      <table class="w-full">
+        <tbody>
+          {% for p in low_stock %}
+          <tr>
+            <td class="td">{{ p.title }}</td>
+            <td class="td text-right"><span class="badge bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">{{ p.current_stock }}</span></td>
+          </tr>
+          {% empty %}
+          <tr><td class="td text-gray-400">Stock levels are fine.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const ctx = document.getElementById('sales-chart');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: {{ chart_labels|safe }},
+        datasets: [{
+          label: 'Sales',
+          data: {{ chart_data|safe }},
+          borderColor: '#4f46e5',
+          backgroundColor: 'rgba(79, 70, 229, 0.1)',
+          fill: true, tension: 0.3,
+        }],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } },
+      },
+    });
+  });
+</script>
+{% endblock %}

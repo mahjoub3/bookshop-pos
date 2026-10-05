@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load shop_extras %}
+{% block title %}Best sellers — {{ shop.shop_name }}{% endblock %}
+
+{% block content %}
+<div class="card p-4 max-w-3xl">
+  <div class="flex flex-wrap items-center gap-2 mb-4">
+    <h1 class="text-xl font-bold flex-1">Best sellers</h1>
+    {% include "reports/partials/_export_buttons.html" %}
+  </div>
+  <form method="get" class="flex items-center gap-2 mb-4">
+    <input type="date" name="start" value="{{ start|date:'Y-m-d' }}" class="input !w-40">
+    <input type="date" name="end" value="{{ end|date:'Y-m-d' }}" class="input !w-40">
+    <button class="btn-primary">Apply</button>
+  </form>
+  <table class="w-full">
+    <thead><tr><th class="th">#</th><th class="th">Product</th><th class="th">Type</th><th class="th text-right">Qty sold</th><th class="th text-right">Revenue</th></tr></thead>
+    <tbody>
+      {% for r in rows %}
+      <tr>
+        <td class="td text-gray-400">{{ forloop.counter }}</td>
+        <td class="td font-medium">{{ r.product__title }}</td>
+        <td class="td">{{ r.product__type }}</td>
+        <td class="td text-right">{{ r.qty }}</td>
+        <td class="td text-right">{{ r.revenue|money:shop.currency }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5" class="td text-center text-gray-400 py-8">No sales in this period.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

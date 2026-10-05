@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% load shop_extras %}
+{% block title %}Expenses — {{ shop.shop_name }}{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+  <div class="lg:col-span-2 card p-4">
+    <div class="flex flex-wrap items-center gap-2 mb-4">
+      <h1 class="text-xl font-bold flex-1">Expenses</h1>
+      {% include "reports/partials/_export_buttons.html" %}
+    </div>
+    <form method="get" class="flex items-center gap-2 mb-4">
+      <input type="date" name="start" value="{{ start|date:'Y-m-d' }}" class="input !w-40">
+      <input type="date" name="end" value="{{ end|date:'Y-m-d' }}" class="input !w-40">
+      <button class="btn-primary">Apply</button>
+    </form>
+    <table class="w-full">
+      <thead><tr><th class="th">Date</th><th class="th">Category</th><th class="th">Description</th><th class="th text-right">Amount</th></tr></thead>
+      <tbody>
+        {% for e in expenses %}
+        <tr>
+          <td class="td">{{ e.expense_date }}</td>
+          <td class="td">{{ e.get_category_display }}</td>
+          <td class="td">{{ e.description }}</td>
+          <td class="td text-right">{{ e.amount|money:shop.currency }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" class="td text-center text-gray-400 py-8">No expenses in this period.</td></tr>
+        {% endfor %}
+      </tbody>
+      <tfoot><tr class="font-bold"><td colspan="3" class="td text-right">Total</td><td class="td text-right">{{ total|money:shop.currency }}</td></tr></tfoot>
+    </table>
+  </div>
+
+  <div class="card p-4 h-fit">
+    <h2 class="font-semibold mb-3">Record expense</h2>
+    <form method="post" class="space-y-3">
+      {% csrf_token %}
+      <div>
+        <label class="block text-xs text-gray-500 mb-1">Category</label>
+        <select name="category" class="input">
+          {% for value, label in categories %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs text-gray-500 mb-1">Description</label>
+        <input type="text" name="description" required class="input">
+      </div>
+      <div>
+        <label class="block text-xs text-gray-500 mb-1">Amount</label>
+        <input type="number" name="amount" step="0.01" min="0.01" required class="input">
+      </div>
+      <div>
+        <label class="block text-xs text-gray-500 mb-1">Date</label>
+        <input type="date" name="expense_date" value="{{ today|date:'Y-m-d' }}" class="input">
+      </div>
+      <button type="submit" class="btn-primary w-full">Save expense</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

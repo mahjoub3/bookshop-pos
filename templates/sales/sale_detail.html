@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% load shop_extras %}
+{% block title %}{{ sale.receipt_no }} — {{ shop.shop_name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-4">
+  <div class="flex items-center gap-3">
+    <a href="{% url 'sales:sale_list' %}" class="btn-secondary">← Sales</a>
+    <h1 class="text-xl font-bold flex-1">{{ sale.receipt_no }}</h1>
+    <a href="{% url 'sales:receipt' sale.pk %}" target="_blank" class="btn-secondary">🖨 Print receipt</a>
+  </div>
+
+  <div class="card p-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+    <div><p class="text-gray-500">Date</p><p class="font-medium">{{ sale.sale_date|date:"Y-m-d H:i" }}</p></div>
+    <div><p class="text-gray-500">Customer</p><p class="font-medium">{{ sale.customer.name|default:"Walk-in" }}</p></div>
+    <div><p class="text-gray-500">Cashier</p><p class="font-medium">{{ sale.user.username|default:"—" }}</p></div>
+    <div><p class="text-gray-500">Status</p><p class="font-medium">{{ sale.get_payment_status_display }}</p></div>
+  </div>
+
+  <div class="card p-4">
+    <table class="w-full">
+      <thead><tr>
+        <th class="th">Product</th><th class="th text-right">Qty</th>
+        <th class="th text-right">Price</th><th class="th text-right">Discount</th>
+        <th class="th text-right">Total</th>
+        {% if request.user.profile.role != 'cashier' %}<th class="th"></th>{% endif %}
+      </tr></thead>
+      <tbody>
+        {% for item in sale.items.all %}
+        <tr>
+          <td class="td">{{ item.product.title }}</td>
+          <td class="td text-right">{{ item.quantity }}</td>
+          <td class="td text-right">{{ item.unit_price|money:shop.currency }}</td>
+          <td class="td text-right">{{ item.discount|money:shop.currency }}</td>
+          <td class="td text-right font-medium">{{ item.line_total|money:shop.currency }}</td>
+          {% if request.user.profile.role != 'cashier' %}
+          <td class="td text-right">
+            <form method="post" action="{% url 'sales:sale_return' sale.pk %}" class="flex gap-1 justify-end items-center">
+              {% csrf_token %}
+              <input type="hidden" name="product_id" value="{{ item.product.pk }}">
+              <input type="number" name="quantity" min="1" max="{{ item.quantity }}" value="1" class="input !py-0.5 !px-2 !w-16 text-right">
+              <select name="refund_method" class="input !py-0.5 !px-1 !w-24 text-xs">
+                <option value="credit">Credit</option>
+                <option value="cash">Cash</option>
+              </select>
+              <input type="text" name="reason" placeholder="Reason" class="input !py-0.5 !px-2 !w-28 text-xs">
+              <button class="btn-danger !px-2 !py-0.5 text-xs">Return</button>
+            </form>
+          </td>
+          {% endif %}
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot class="text-sm">
+        <tr><td colspan="4" class="td text-right text-gray-500">Subtotal</td>
+            <td class="td text-right">{{ sale.subtotal|money:shop.currency }}</td><td class="td"></td></tr>
+        <tr><td colspan="4" class="td text-right text-gray-500">Discount</td>
+            <td class="td text-right">{{ sale.discount|money:shop.currency }}</td><td class="td"></td></tr>
+        <tr><td colspan="4" class="td text-right text-gray-500">Tax</td>
+            <td class="td text-right">{{ sale.tax|money:shop.currency }}</td><td class="td"></td></tr>
+        <tr class="font-bold text-base">
+            <td colspan="4" class="td text-right">Total</td>
+            <td class="td text-right">{{ sale.total|money:shop.currency }}</td><td class="td"></td></tr>
+        <tr><td colspan="4" class="td text-right text-gray-500">Paid / Due</td>
+            <td class="td text-right">{{ sale.amount_paid|money:shop.currency }} / {{ sale.amount_due|money:shop.currency }}</td><td class="td"></td></tr>
+      </tfoot>
+    </table>
+  </div>
+
+  {% if sale.returns.all %}
+  <div class="card p-4">
+    <h2 class="font-semibold mb-2">Returns</h2>
+    <ul class="text-sm space-y-1">
+      {% for r in sale.returns.all %}
+      <li>{{ r.return_date|date:"Y-m-d" }} — {{ r.product.title }} ×{{ r.quantity }}
+          ({{ r.get_refund_method_display }}) · {{ r.reason }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

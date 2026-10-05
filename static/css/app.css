@@ -1,0 +1,8 @@
+/* Things Tailwind CDN can't express in the inline component block */
+[x-cloak] { display: none !important; }
+
+@media print {
+  body * { visibility: hidden; }
+  #receipt, #receipt * { visibility: visible; }
+  #receipt { position: absolute; inset: 0; width: 80mm; }
+}

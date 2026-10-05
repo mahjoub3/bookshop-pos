@@ -1,0 +1,41 @@
+{% load shop_extras %}
+<table class="w-full">
+  <thead><tr>
+    <th class="th">Title</th><th class="th">Type</th><th class="th">Category</th>
+    <th class="th">SKU / Barcode</th><th class="th text-right">Cost</th>
+    <th class="th text-right">Price</th><th class="th text-right">Stock</th><th class="th"></th>
+  </tr></thead>
+  <tbody>
+    {% for product in products %}
+    <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+      <td class="td">
+        <a href="{% url 'catalog:product_detail' product.pk %}" class="font-medium text-indigo-600 dark:text-indigo-400 hover:underline">
+          {{ product.title }}
+        </a>
+        <div class="text-xs text-gray-500">{{ product.author }}</div>
+      </td>
+      <td class="td"><span class="badge {% if product.type == 'book' %}bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-200{% else %}bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-200{% endif %}">{{ product.get_type_display }}</span></td>
+      <td class="td">{{ product.category.name|default:"—" }}</td>
+      <td class="td font-mono text-xs">{{ product.sku }}<br>{{ product.barcode }}</td>
+      <td class="td text-right">{{ product.cost_price|money:shop.currency }}</td>
+      <td class="td text-right font-medium">{{ product.sell_price|money:shop.currency }}</td>
+      <td class="td text-right">
+        {% if product.is_low_stock %}
+        <span class="badge bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">{{ product.current_stock }}</span>
+        {% else %}
+        {{ product.current_stock }}
+        {% endif %}
+      </td>
+      <td class="td text-right space-x-2 whitespace-nowrap">
+        <a href="{% url 'catalog:product_barcode' product.pk %}" target="_blank" class="text-gray-500 hover:underline text-xs">Label</a>
+        {% if request.user.profile.role != 'cashier' %}
+        <a href="{% url 'catalog:product_edit' product.pk %}" class="text-indigo-600 hover:underline text-xs">Edit</a>
+        {% endif %}
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="8" class="td text-center text-gray-400 py-8">No products found.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% include "partials/_pagination.html" with htmx_target="#table-wrap" %}

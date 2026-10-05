@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% load shop_extras %}
+{% block title %}Customers — {{ shop.shop_name }}{% endblock %}
+
+{% block content %}
+<div class="card p-4">
+  <div class="flex flex-wrap items-center gap-2 mb-4">
+    <h1 class="text-xl font-bold flex-1">Customers</h1>
+    <input type="search" name="q" value="{{ request.GET.q }}" placeholder="Name or phone…" class="input !w-64"
+           hx-get="{% url 'customers:customer_list' %}" hx-trigger="keyup changed delay:300ms"
+           hx-target="#table-wrap" hx-push-url="true">
+    {% if request.user.profile.role != 'cashier' %}
+    <a href="{% url 'reports:aging' %}" class="btn-secondary">Aging report</a>
+    <a href="{% url 'customers:customer_create' %}" class="btn-primary">+ New customer</a>
+    {% endif %}
+  </div>
+  <div id="table-wrap">
+    {% include "customers/partials/_customer_table.html" %}
+  </div>
+</div>
+{% endblock %}

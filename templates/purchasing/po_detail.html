@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% load shop_extras %}
+{% block title %}PO-{{ po.pk }} — {{ shop.shop_name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-4">
+  <div class="flex items-center gap-3 flex-wrap">
+    <a href="{% url 'purchasing:po_list' %}" class="btn-secondary">← POs</a>
+    <h1 class="text-xl font-bold flex-1">PO-{{ po.pk }} — {{ po.supplier.name }}</h1>
+    <span class="badge bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-200">{{ po.get_status_display }}</span>
+  </div>
+
+  <div class="card p-4 grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
+    <div><p class="text-gray-500">Order date</p><p class="font-medium">{{ po.order_date }}</p></div>
+    <div><p class="text-gray-500">Received</p><p class="font-medium">{{ po.received_date|default:"—" }}</p></div>
+    <div><p class="text-gray-500">Total</p><p class="font-medium">{{ po.total|money:shop.currency }}</p></div>
+  </div>
+
+  <div class="card p-4">
+    <table class="w-full">
+      <thead><tr>
+        <th class="th">Product</th><th class="th text-right">Ordered</th>
+        <th class="th text-right">Received</th><th class="th text-right">Unit cost</th><th class="th text-right">Line total</th>
+      </tr></thead>
+      <tbody>
+        {% for item in po.items.all %}
+        <tr>
+          <td class="td">{{ item.product.title }}</td>
+          <td class="td text-right">{{ item.quantity_ordered }}</td>
+          <td class="td text-right {% if item.outstanding %}text-amber-600{% else %}text-emerald-600{% endif %}">{{ item.quantity_received }}</td>
+          <td class="td text-right">{{ item.unit_cost|money:shop.currency }}</td>
+          <td class="td text-right font-medium">{{ item.line_total|money:shop.currency }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if po.status != 'received' and po.status != 'cancelled' %}
+  <div class="flex gap-2">
+    {% if po.status == 'draft' %}
+    <form method="post" action="{% url 'purchasing:po_status' po.pk %}">
+      {% csrf_token %}
+      <button name="action" value="order" class="btn-primary">Mark ordered</button>
+    </form>
+    {% endif %}
+    <a href="{% url 'purchasing:po_receive' po.pk %}" class="btn-primary">📥 Receive stock</a>
+    <form method="post" action="{% url 'purchasing:po_status' po.pk %}"
+          onsubmit="return confirm('Cancel this purchase order?')">
+      {% csrf_token %}
+      <button name="action" value="cancel" class="btn-danger">Cancel PO</button>
+    </form>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

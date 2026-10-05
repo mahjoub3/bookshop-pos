@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}New purchase order — {{ shop.shop_name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto card p-6" x-data="poForm()">
+  <h1 class="text-xl font-bold mb-4">New purchase order</h1>
+  <form method="post">
+    {% csrf_token %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+      <div>
+        <label class="block text-sm font-medium mb-1">Supplier</label>
+        <select name="supplier" required class="input">
+          {% for s in suppliers %}<option value="{{ s.pk }}">{{ s.name }}</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">Notes</label>
+        <input type="text" name="notes" class="input">
+      </div>
+    </div>
+
+    <table class="w-full mb-3">
+      <thead><tr>
+        <th class="th">Product</th><th class="th w-28">Qty</th><th class="th w-32">Unit cost</th><th class="th w-10"></th>
+      </tr></thead>
+      <tbody>
+        <template x-for="(line, i) in lines" :key="i">
+          <tr>
+            <td class="td">
+              <select name="product_id" class="input" x-model="line.product_id" required>
+                <option value="">— choose —</option>
+                {% for p in products %}
+                <option value="{{ p.pk }}" data-cost="{{ p.cost_price }}">{{ p.title }} ({{ p.sku }})</option>
+                {% endfor %}
+              </select>
+            </td>
+            <td class="td"><input type="number" name="quantity" min="1" value="1" class="input !py-1" required></td>
+            <td class="td"><input type="number" name="unit_cost" step="0.01" min="0" class="input !py-1" required
+                                  :value="line.cost"></td>
+            <td class="td"><button type="button" @click="lines.splice(i, 1)" class="text-red-500">✕</button></td>
+          </tr>
+        </template>
+      </tbody>
+    </table>
+    <button type="button" @click="lines.push({product_id: '', cost: ''})" class="btn-secondary mb-4">+ Add line</button>
+
+    <div class="flex gap-2">
+      <button type="submit" name="action" value="draft" class="btn-secondary">Save as draft</button>
+      <button type="submit" name="action" value="order" class="btn-primary">Save &amp; mark ordered</button>
+    </div>
+  </form>
+</div>
+
+<script>
+function poForm() {
+  return { lines: [{product_id: '', cost: ''}] };
+}
+</script>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% load shop_extras %}
+{% block title %}Suppliers — {{ shop.shop_name }}{% endblock %}
+
+{% block content %}
+<div class="card p-4">
+  <div class="flex items-center gap-2 mb-4">
+    <h1 class="text-xl font-bold flex-1">Suppliers</h1>
+    <input type="search" name="q" value="{{ request.GET.q }}" placeholder="Search…" class="input !w-56"
+           hx-get="{% url 'catalog:supplier_list' %}" hx-trigger="keyup changed delay:300ms"
+           hx-target="table" hx-select="table" hx-swap="outerHTML">
+    <a href="{% url 'purchasing:supplier_return' %}" class="btn-secondary">↩ Return to supplier</a>
+    <a href="{% url 'catalog:supplier_create' %}" class="btn-primary">+ New supplier</a>
+  </div>
+  <table class="w-full">
+    <thead><tr>
+      <th class="th">Name</th><th class="th">Phone</th><th class="th">Email</th>
+      <th class="th text-right">Balance owed</th><th class="th"></th>
+    </tr></thead>
+    <tbody>
+      {% for s in suppliers %}
+      <tr>
+        <td class="td font-medium">{{ s.name }}</td>
+        <td class="td">{{ s.phone|default:"—" }}</td>
+        <td class="td">{{ s.email|default:"—" }}</td>
+        <td class="td text-right {% if s.balance > 0 %}text-red-600{% endif %}">{{ s.balance|money:shop.currency }}</td>
+        <td class="td text-right"><a href="{% url 'catalog:supplier_edit' s.pk %}" class="text-indigo-600 hover:underline text-sm">Edit</a></td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5" class="td text-center text-gray-400 py-8">No suppliers yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% include "partials/_pagination.html" %}
+</div>
+{% endblock %}

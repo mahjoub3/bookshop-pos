@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% block title %}Edit category — {{ shop.shop_name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto card p-6">
+  <h1 class="text-xl font-bold mb-4">Edit category: {{ object.name }}</h1>
+  <form method="post" class="space-y-4">
+    {% csrf_token %}
+    {{ form|crispy }}
+    <div class="flex gap-2">
+      <button type="submit" class="btn-primary">Save</button>
+      <a href="{% url 'catalog:category_list' %}" class="btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

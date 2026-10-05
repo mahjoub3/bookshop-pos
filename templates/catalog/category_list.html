@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% block title %}Categories — {{ shop.shop_name }}{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+  <div class="lg:col-span-2 card p-4">
+    <h1 class="text-xl font-bold mb-4">Categories</h1>
+    <table class="w-full">
+      <thead><tr><th class="th">Name</th><th class="th">Parent</th><th class="th">Active</th><th class="th"></th></tr></thead>
+      <tbody>
+        {% for category in categories %}
+        <tr>
+          <td class="td font-medium">{{ category.name }}</td>
+          <td class="td">{{ category.parent.name|default:"—" }}</td>
+          <td class="td">{% if category.is_active %}✅{% else %}—{% endif %}</td>
+          <td class="td text-right"><a href="{% url 'catalog:category_edit' category.pk %}" class="text-indigo-600 hover:underline text-sm">Edit</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="card p-4">
+    <h2 class="font-semibold mb-3">New category</h2>
+    <form method="post" class="space-y-3">
+      {% csrf_token %}
+      {{ form|crispy }}
+      <button type="submit" class="btn-primary w-full">Add</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

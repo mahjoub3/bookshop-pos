@@ -1,0 +1,18 @@
+{% load shop_extras %}
+{# POS live product search results #}
+{% if results %}
+<div class="card divide-y divide-gray-100 dark:divide-gray-800 max-h-80 overflow-y-auto shadow-lg">
+  {% for product in results %}
+  <form hx-post="{% url 'sales:pos_add' product.pk %}" hx-target="#cart-area" hx-swap="innerHTML">
+    {% csrf_token %}
+    <button type="submit" class="w-full flex items-center justify-between gap-2 px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-800 text-left">
+      <span>
+        <span class="block text-sm font-medium">{{ product.title }}</span>
+        <span class="block text-xs text-gray-500">{{ product.sku }} {{ product.isbn }} · stock {{ product.current_stock }}</span>
+      </span>
+      <span class="text-sm font-semibold">{{ product.sell_price|money:shop.currency }}</span>
+    </button>
+  </form>
+  {% endfor %}
+</div>
+{% endif %}

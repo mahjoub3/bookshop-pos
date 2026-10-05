@@ -1,0 +1,15 @@
+{# POS customer autocomplete results #}
+{% if customers %}
+<div class="card divide-y divide-gray-100 dark:divide-gray-800 max-h-64 overflow-y-auto shadow-lg">
+  {% for c in customers %}
+  <form hx-post="{% url 'sales:pos_set_customer' %}" hx-target="#cart-area" hx-swap="innerHTML">
+    {% csrf_token %}
+    <input type="hidden" name="customer_id" value="{{ c.pk }}">
+    <button type="submit" class="w-full px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-800 text-left text-sm">
+      <span class="font-medium">{{ c.name }}</span>
+      <span class="text-xs text-gray-500">{{ c.phone }}</span>
+    </button>
+  </form>
+  {% endfor %}
+</div>
+{% endif %}

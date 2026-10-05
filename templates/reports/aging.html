@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% load shop_extras %}
+{% block title %}Receivables aging — {{ shop.shop_name }}{% endblock %}
+
+{% block content %}
+<div class="card p-4">
+  <div class="flex items-center gap-2 mb-4">
+    <h1 class="text-xl font-bold flex-1">Receivables aging</h1>
+    {% include "reports/partials/_export_buttons.html" %}
+  </div>
+  <table class="w-full">
+    <thead><tr>
+      <th class="th">Customer</th><th class="th text-right">Current (≤30d)</th>
+      <th class="th text-right">31–60d</th><th class="th text-right">61–90d</th>
+      <th class="th text-right">90+d</th><th class="th text-right">Total due</th><th class="th"></th>
+    </tr></thead>
+    <tbody>
+      {% for r in report %}
+      <tr>
+        <td class="td font-medium">{{ r.customer.name }}</td>
+        <td class="td text-right">{{ r.current|money:shop.currency }}</td>
+        <td class="td text-right {% if r.days30 %}text-amber-600{% endif %}">{{ r.days30|money:shop.currency }}</td>
+        <td class="td text-right {% if r.days60 %}text-orange-600{% endif %}">{{ r.days60|money:shop.currency }}</td>
+        <td class="td text-right {% if r.days90 %}text-red-600 font-semibold{% endif %}">{{ r.days90|money:shop.currency }}</td>
+        <td class="td text-right font-semibold">{{ r.total|money:shop.currency }}</td>
+        <td class="td text-right">
+          <a href="{% url 'customers:customer_detail' r.customer.pk %}" class="text-indigo-600 hover:underline text-sm">Open</a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7" class="td text-center text-gray-400 py-8">No outstanding credit. 🎉</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

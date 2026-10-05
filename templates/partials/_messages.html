@@ -1,0 +1,13 @@
+{# Django messages -> Alpine toasts (full page loads) #}
+{% if messages %}
+<script>
+  window.addEventListener('DOMContentLoaded', () => {
+    {% for message in messages %}
+    window.dispatchEvent(new CustomEvent('toast', {detail: {
+      type: '{{ message.tags|default:"info" }}',
+      text: '{{ message|escapejs }}'
+    }}));
+    {% endfor %}
+  });
+</script>
+{% endif %}

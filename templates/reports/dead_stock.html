@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% load shop_extras %}
+{% block title %}Dead stock — {{ shop.shop_name }}{% endblock %}
+
+{% block content %}
+<div class="card p-4 max-w-3xl">
+  <div class="flex flex-wrap items-center gap-2 mb-4">
+    <h1 class="text-xl font-bold flex-1">Dead stock</h1>
+    {% include "reports/partials/_export_buttons.html" %}
+  </div>
+  <form method="get" class="flex items-center gap-2 mb-4 text-sm">
+    <label>No sale in the last</label>
+    <input type="number" name="days" value="{{ days }}" min="1" class="input !w-24">
+    <label>days</label>
+    <button class="btn-primary">Apply</button>
+  </form>
+  <table class="w-full">
+    <thead><tr>
+      <th class="th">Product</th><th class="th">SKU</th><th class="th">Category</th>
+      <th class="th text-right">Stock</th><th class="th text-right">Cost value</th>
+    </tr></thead>
+    <tbody>
+      {% for p in products %}
+      <tr>
+        <td class="td font-medium">{{ p.title }}</td>
+        <td class="td font-mono text-xs">{{ p.sku }}</td>
+        <td class="td">{{ p.category.name|default:"—" }}</td>
+        <td class="td text-right">{{ p.current_stock }}</td>
+        <td class="td text-right">{{ p.cost_price|mul:p.current_stock|money:shop.currency }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5" class="td text-center text-gray-400 py-8">No dead stock — everything is moving. 🎉</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

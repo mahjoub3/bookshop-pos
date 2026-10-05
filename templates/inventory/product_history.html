@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% load shop_extras %}
+{% block title %}History — {{ product.title }}{% endblock %}
+
+{% block content %}
+<div class="card p-4 max-w-4xl mx-auto">
+  <div class="flex items-center gap-3 mb-4">
+    <a href="{% url 'inventory:stock_list' %}" class="btn-secondary">← Stock</a>
+    <h1 class="text-xl font-bold flex-1">{{ product.title }} — ledger history</h1>
+    <span class="badge bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
+      Current: {{ product.current_stock }}
+    </span>
+  </div>
+  <table class="w-full">
+    <thead><tr>
+      <th class="th">Date</th><th class="th">Type</th><th class="th text-right">Δ Qty</th>
+      <th class="th text-right">Unit cost</th><th class="th">Ref</th><th class="th">Note</th><th class="th">By</th>
+    </tr></thead>
+    <tbody>
+      {% for t in txns %}
+      <tr>
+        <td class="td whitespace-nowrap">{{ t.created_at|date:"Y-m-d H:i" }}</td>
+        <td class="td"><span class="badge bg-gray-100 dark:bg-gray-800">{{ t.get_txn_type_display }}</span></td>
+        <td class="td text-right font-medium {% if t.quantity_delta > 0 %}text-emerald-600{% else %}text-red-600{% endif %}">
+          {{ t.quantity_delta }}
+        </td>
+        <td class="td text-right">{{ t.unit_cost|default:"—"|money:shop.currency }}</td>
+        <td class="td text-xs font-mono">{{ t.reference_type }}{% if t.reference_id %}#{{ t.reference_id }}{% endif %}</td>
+        <td class="td text-xs text-gray-500">{{ t.note }}</td>
+        <td class="td">{{ t.user.username|default:"—" }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7" class="td text-center text-gray-400 py-8">No transactions yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% include "partials/_pagination.html" %}
+</div>
+{% endblock %}

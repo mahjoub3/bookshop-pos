@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% load shop_extras %}
+{% block title %}Daily sales — {{ shop.shop_name }}{% endblock %}
+
+{% block content %}
+<div class="space-y-4 max-w-3xl">
+  <div class="card p-4">
+    <div class="flex flex-wrap items-center gap-2">
+      <h1 class="text-xl font-bold flex-1">Daily sales &amp; cash drawer</h1>
+      {% include "reports/partials/_export_buttons.html" %}
+    </div>
+    <form method="get" class="mt-3 flex items-center gap-2">
+      <input type="date" name="day" value="{{ day|date:'Y-m-d' }}" class="input !w-44">
+      <button class="btn-secondary">Go</button>
+    </form>
+  </div>
+
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <div class="card p-4"><p class="text-sm text-gray-500">Transactions</p><p class="text-2xl font-bold">{{ summary.count }}</p></div>
+    <div class="card p-4"><p class="text-sm text-gray-500">Total sales</p><p class="text-2xl font-bold">{{ summary.total|money:shop.currency }}</p></div>
+    <div class="card p-4"><p class="text-sm text-gray-500">Collected</p><p class="text-2xl font-bold text-emerald-600">{{ summary.paid|money:shop.currency }}</p></div>
+    <div class="card p-4"><p class="text-sm text-gray-500">On credit</p><p class="text-2xl font-bold text-red-600">{{ summary.due|money:shop.currency }}</p></div>
+  </div>
+
+  <div class="card p-4">
+    <h2 class="font-semibold mb-2">Payments by method</h2>
+    <table class="w-full max-w-sm">
+      {% for method, amount in summary.by_method.items %}
+      <tr><td class="td capitalize">{{ method }}</td><td class="td text-right">{{ amount|money:shop.currency }}</td></tr>
+      {% empty %}
+      <tr><td class="td text-gray-400">No payments recorded.</td></tr>
+      {% endfor %}
+    </table>
+  </div>
+
+  <div class="card p-4 text-sm space-y-1">
+    <div class="flex justify-between"><span>Discounts given</span><span>{{ summary.discount|money:shop.currency }}</span></div>
+    <div class="flex justify-between"><span>Tax collected</span><span>{{ summary.tax|money:shop.currency }}</span></div>
+    <div class="flex justify-between font-bold border-t border-gray-200 dark:border-gray-700 pt-1">
+      <span>Gross profit</span><span>{{ summary.profit|money:shop.currency }}</span>
+    </div>
+  </div>
+</div>
+{% endblock %}

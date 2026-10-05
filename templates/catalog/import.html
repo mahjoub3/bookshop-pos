@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Import products — {{ shop.shop_name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-4">
+  <div class="card p-6">
+    <h1 class="text-xl font-bold mb-2">Bulk import products (CSV)</h1>
+    <p class="text-sm text-gray-500 mb-4">
+      Headers: <code>title, type, isbn, sku, barcode, author, publisher, category,
+      cost_price, sell_price, reorder_level, opening_stock</code>.
+      Rows with an existing SKU/barcode/ISBN are updated, others created.
+    </p>
+    <form method="post" enctype="multipart/form-data" class="flex items-center gap-3">
+      {% csrf_token %}
+      {{ form.file }}
+      <button type="submit" class="btn-primary">Upload &amp; preview</button>
+    </form>
+  </div>
+
+  {% if errors %}
+  <div class="card p-4 border-amber-300 bg-amber-50 dark:bg-amber-950">
+    <h2 class="font-semibold text-amber-800 dark:text-amber-200 mb-1">Warnings</h2>
+    <ul class="text-sm text-amber-700 dark:text-amber-300 list-disc pl-5">
+      {% for e in errors %}<li>{{ e }}</li>{% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  {% if preview %}
+  <div class="card p-4">
+    <h2 class="font-semibold mb-2">Preview — {{ row_count }} valid row(s)</h2>
+    <table class="w-full">
+      <thead><tr><th class="th">Title</th><th class="th">Type</th><th class="th">SKU</th><th class="th text-right">Cost</th><th class="th text-right">Price</th></tr></thead>
+      <tbody>
+        {% for row in preview %}
+        <tr>
+          <td class="td">{{ row.title }}</td><td class="td">{{ row.type|default:"book" }}</td>
+          <td class="td">{{ row.sku }}</td>
+          <td class="td text-right">{{ row.cost_price|default:"0" }}</td>
+          <td class="td text-right">{{ row.sell_price|default:"0" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <form method="post" class="mt-4">
+      {% csrf_token %}
+      <button type="submit" name="confirm" value="1" class="btn-primary">Confirm import of {{ row_count }} row(s)</button>
+    </form>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

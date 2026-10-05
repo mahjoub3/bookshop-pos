@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load shop_extras %}
+{% block title %}Products — {{ shop.shop_name }}{% endblock %}
+
+{% block content %}
+<div class="card p-4">
+  <div class="flex flex-wrap items-center gap-2 mb-4">
+    <h1 class="text-xl font-bold flex-1">Products</h1>
+    <input type="search" name="q" value="{{ request.GET.q }}" placeholder="Title, ISBN, SKU, barcode, author…"
+           class="input !w-72"
+           hx-get="{% url 'catalog:product_list' %}" hx-trigger="keyup changed delay:300ms"
+           hx-target="#table-wrap" hx-push-url="true">
+    <select name="type" class="input !w-36" hx-get="{% url 'catalog:product_list' %}"
+            hx-trigger="change" hx-target="#table-wrap" hx-push-url="true">
+      <option value="">All types</option>
+      <option value="book" {% if request.GET.type == 'book' %}selected{% endif %}>Books</option>
+      <option value="stationery" {% if request.GET.type == 'stationery' %}selected{% endif %}>Stationery</option>
+    </select>
+    <select name="category" class="input !w-44" hx-get="{% url 'catalog:product_list' %}"
+            hx-trigger="change" hx-target="#table-wrap" hx-push-url="true">
+      <option value="">All categories</option>
+      {% for c in categories %}
+      <option value="{{ c.pk }}" {% if request.GET.category == c.pk|stringformat:"i" %}selected{% endif %}>{{ c.name }}</option>
+      {% endfor %}
+    </select>
+    <label class="flex items-center gap-1 text-sm">
+      <input type="checkbox" name="low" value="1" {% if request.GET.low == '1' %}checked{% endif %}
+             class="rounded"
+             hx-get="{% url 'catalog:product_list' %}" hx-trigger="change"
+             hx-target="#table-wrap" hx-push-url="true" hx-include="[name='q'],[name='type'],[name='category']">
+      Low stock
+    </label>
+    {% if request.user.profile.role != 'cashier' %}
+    <a href="{% url 'catalog:product_import' %}" class="btn-secondary">⬆ Import CSV</a>
+    <a href="{% url 'catalog:product_export' %}" class="btn-secondary">⬇ Export</a>
+    <a href="{% url 'catalog:product_create' %}" class="btn-primary">+ New product</a>
+    {% endif %}
+  </div>
+  <div id="table-wrap">
+    {% include "catalog/partials/_product_table.html" %}
+  </div>
+</div>
+{% endblock %}

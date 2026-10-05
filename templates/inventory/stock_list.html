@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load shop_extras %}
+{% block title %}Inventory — {{ shop.shop_name }}{% endblock %}
+
+{% block content %}
+<div class="card p-4">
+  <div class="flex flex-wrap items-center gap-2 mb-4">
+    <h1 class="text-xl font-bold flex-1">Current stock</h1>
+    <input type="search" name="q" value="{{ request.GET.q }}" placeholder="Search products…" class="input !w-64"
+           hx-get="{% url 'inventory:stock_list' %}" hx-trigger="keyup changed delay:300ms"
+           hx-target="#table-wrap" hx-push-url="true">
+    <label class="flex items-center gap-1 text-sm">
+      <input type="checkbox" name="low" value="1" {% if request.GET.low == '1' %}checked{% endif %} class="rounded"
+             hx-get="{% url 'inventory:stock_list' %}" hx-trigger="change" hx-target="#table-wrap" hx-push-url="true">
+      Low stock only
+    </label>
+    {% if request.user.profile.role != 'cashier' %}
+    <a href="{% url 'inventory:low_stock' %}" class="btn-secondary">Reorder suggestions</a>
+    <a href="{% url 'inventory:stocktake' %}" class="btn-primary">📋 Stocktake</a>
+    {% endif %}
+  </div>
+  <div id="table-wrap">
+    {% include "inventory/partials/_stock_table.html" %}
+  </div>
+</div>
+{% endblock %}
