@@ -21,7 +21,7 @@ python manage.py seed_demo              # optional demo data
 python manage.py runserver
 ```
 
-Open http://127.0.0.1:8000/ and sign in. The seed command creates `admin/admin`
+Open <http://127.0.0.1:8000/> and sign in. The seed command creates `admin/admin`
 if no superuser exists — **change that password immediately**.
 
 ## 2. Tests
@@ -124,7 +124,7 @@ Run nightly via cron and keep copies off the machine.
 
 ## 8. Project layout
 
-```
+```text
 shop/            project settings, urls, wsgi/asgi
 accounts/        users, roles (Profile), auth views, role_required
 catalog/         Category, Supplier, Product, CSV import/export, barcode labels
